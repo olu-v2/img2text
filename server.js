@@ -1,16 +1,21 @@
-require("dotenv").config();
-const express = require("express");
-const axios = require("axios");
-const path = require("path");
-const cors = require("cors");
-const serverlessExpress = require("@vendia/serverless-express");
-const {
+import "dotenv/config";
+import express from "express";
+import axios from "axios";
+import path from "path";
+import { fileURLToPath } from "url";
+import cors from "cors";
+import serverlessExpress from "@vendia/serverless-express";
+import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
-} = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { v4: uuidv4 } = require("uuid");
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { v4 as uuidv4 } from "uuid";
+
+// __dirname is not available in ES Modules — recreate it
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const s3 = new S3Client({ region: process.env.AWS_REGION || "us-east-1" });
 const BUCKET = process.env.S3_BUCKET;
