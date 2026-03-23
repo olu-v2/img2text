@@ -46,7 +46,6 @@ jobs:
           LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}
           LAMBDA_FUNCTION_NAME: pr-${{ github.event.number }}
           GOOGLE_VISION_API_KEY: ${{ secrets.GOOGLE_VISION_API_KEY}}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: node scripts/deploy-lambda.js
       - name: Post PR Comment
