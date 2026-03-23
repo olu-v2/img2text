@@ -1,7 +1,7 @@
 name: Deploy Lambda
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
