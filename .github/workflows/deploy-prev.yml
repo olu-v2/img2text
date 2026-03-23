@@ -1,0 +1,65 @@
+name: Deploy Lambda
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "yarn"
+
+      # You only need to install dependencies once
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          GOOGLE_VISION_API_KEY=${{ secrets.GOOGLE_VISION_API_KEY}}
+          PORT=3000
+          S3_BUCKET=${{ secrets.S3_BUCKET }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          EOF
+
+      - name: Zip Lambda function
+        run: |
+          # Create zip including handler, assets, source, and deps
+          zip -r function.zip server.js public node_modules package.json package-lock.json .env server.js lambda.js
+
+      - name: Deploy Lambda using AWS SDK
+        id: lambda
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          LAMBDA_ROLE_ARN: ${{ secrets.LAMBDA_ROLE_ARN }}
+          LAMBDA_FUNCTION_NAME: pr-${{ github.event.number }}
+          GOOGLE_VISION_API_KEY: ${{ secrets.GOOGLE_VISION_API_KEY}}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        run: node scripts/deploy-lambda.js
+      - name: Post PR Comment
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const previewUrl = `${{ steps.lambda.outputs.function_url }}`;
+            github.issues.createComment({
+              issue_number: ${{ github.event.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Deployed Preview URL: ${previewUrl}`
+            })
