@@ -27,7 +27,9 @@ dotenv.config({ override: true });
 const client = new LambdaClient({
   region: process.env.AWS_REGION || "us-east-1",
 });
-const apiClient = new ApiGatewayV2Client({ region: process.env.AWS_REGION });
+const apiClient = new ApiGatewayV2Client({
+  region: process.env.AWS_REGION || "us-east-1",
+});
 
 async function createLambda() {
   const functionName = "img2text";
