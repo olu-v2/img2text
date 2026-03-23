@@ -3,7 +3,8 @@ const express = require("express");
 const axios = require("axios");
 const path = require("path");
 const bodyParser = require("body-parser");
-import serverlessExpress from "@vendia/serverless-express";
+const cors = require("cors");
+const serverlessExpress = require("@vendia/serverless-express");
 
 const app = express();
 
