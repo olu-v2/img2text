@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image to Text</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f0f2f5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px 16px;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+        margin-bottom: 24px;
+        color: #1a1a2e;
+      }
+
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .capture-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: #4a90e2;
+        color: white;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .capture-label:hover {
+        background: #357abd;
+      }
+
+      #fileInput {
+        display: none;
+      }
+
+      #preview {
+        width: 100%;
+        border-radius: 12px;
+        display: none;
+        object-fit: contain;
+        max-height: 280px;
+      }
+
+      #extractBtn {
+        padding: 14px;
+        background: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: none;
+      }
+      #extractBtn:hover {
+        background: #1e8449;
+      }
+      #extractBtn:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+      }
+
+      #resultBox {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      #resultBox h3 {
+        font-size: 0.9rem;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      #resultText {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 240px;
+        overflow-y: auto;
+        color: #1a1a2e;
+      }
+
+      #copyBtn {
+        align-self: flex-end;
+        padding: 8px 16px;
+        background: transparent;
+        border: 1px solid #4a90e2;
+        color: #4a90e2;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      #copyBtn:hover {
+        background: #4a90e2;
+        color: white;
+      }
+
+      #status {
+        font-size: 0.85rem;
+        color: #888;
+        text-align: center;
+        min-height: 20px;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #ccc;
+        border-top-color: #4a90e2;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📷 Image to Text</h1>
+
+    <div class="card">
+      <label class="capture-label" for="fileInput">
+        📸 Take Photo or Upload Image
+      </label>
+      <input
+        type="file"
+        id="fileInput"
+        accept="image/*"
+        capture="environment"
+      />
+
+      <img id="preview" alt="Image preview" />
+
+      <button id="extractBtn">Extract Text</button>
+
+      <div id="status"></div>
+
+      <div id="resultBox">
+        <h3>Extracted Text</h3>
+        <div id="resultText"></div>
+        <button id="copyBtn">📋 Copy</button>
+      </div>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const preview = document.getElementById("preview");
+      const extractBtn = document.getElementById("extractBtn");
+      const resultBox = document.getElementById("resultBox");
+      const resultText = document.getElementById("resultText");
+      const copyBtn = document.getElementById("copyBtn");
+      const status = document.getElementById("status");
+
+      let base64Image = null;
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+        resultBox.style.display = "none";
+        status.textContent = "";
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          base64Image = reader.result.split(",")[1];
+          extractBtn.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      });
+
+      extractBtn.addEventListener("click", async () => {
+        if (!base64Image) return;
+
+        extractBtn.disabled = true;
+        status.innerHTML = '<span class="spinner"></span> Extracting text...';
+        resultBox.style.display = "none";
+
+        try {
+          const res = await fetch("/api/extract-text", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageBase64: base64Image }),
+          });
+
+          const data = await res.json();
+
+          if (data.error) throw new Error(data.error);
+
+          resultText.textContent = data.text;
+          resultBox.style.display = "flex";
+          status.textContent = "";
+        } catch (err) {
+          status.textContent = "⚠️ Error: " + err.message;
+        } finally {
+          extractBtn.disabled = false;
+        }
+      });
+
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(resultText.textContent);
+        copyBtn.textContent = "✅ Copied!";
+        setTimeout(() => (copyBtn.textContent = "📋 Copy"), 2000);
+      });
+    </script>
+  </body>
+</html>
