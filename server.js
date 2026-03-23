@@ -136,4 +136,4 @@ app.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`),
 );
 
-exports.handler = serverlessExpress({ app });
+export const handler = serverlessExpress({ app });
