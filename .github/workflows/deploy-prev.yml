@@ -1,7 +1,7 @@
 name: Deploy Lambda
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
@@ -50,7 +50,7 @@ jobs:
           GOOGLE_VISION_API_KEY: ${{ secrets.GOOGLE_VISION_API_KEY}}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
-        run: node scripts/deploy-lambda.js
+        run: node scripts/deploy-prev.js
       - name: Post PR Comment
         uses: actions/github-script@v3
         with:
