@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Image to Text</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -197,7 +198,7 @@
       // Replace the FileReader block in index.html with this:
       fileInput.addEventListener("change", (e) => {
         selectedFiles = Array.from(e.target.files).slice(0, 50);
-        fileCount.textContent = `${selectedFiles.files} image(s) selected`;
+        fileCount.textContent = `${selectedFiles.length} image(s) selected`;
         extractBtn.style.display = "block";
         resultBox.style.display = "none";
       });
