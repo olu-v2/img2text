@@ -91,7 +91,7 @@ async function createLambda() {
     }
   }
 
-  const apiName = "img2text";
+  const apiName = functionName;
   const existingApis = await apiClient.send(new GetApisCommand({}));
   let api = existingApis.Items?.find((a) => a.Name === apiName);
 
