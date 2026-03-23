@@ -193,21 +193,45 @@
 
       let base64Image = null;
 
+      // Replace the FileReader block in index.html with this:
       fileInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         preview.src = URL.createObjectURL(file);
         preview.style.display = "block";
-        resultBox.style.display = "none";
-        status.textContent = "";
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          base64Image = reader.result.split(",")[1];
-          extractBtn.style.display = "block";
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+
+          // Cap at 1600px wide — plenty for OCR
+          const MAX = 1600;
+          let { width, height } = img;
+          if (width > MAX) {
+            height = (height * MAX) / width;
+            width = MAX;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+          // 0.85 quality JPEG — sharp enough for text, much smaller payload
+          canvas.toBlob(
+            (blob) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                base64Image = reader.result.split(",")[1];
+                extractBtn.style.display = "block";
+              };
+              reader.readAsDataURL(blob);
+            },
+            "image/jpeg",
+            0.85,
+          );
         };
-        reader.readAsDataURL(file);
+        img.src = URL.createObjectURL(file);
       });
 
       extractBtn.addEventListener("click", async () => {
