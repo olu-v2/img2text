@@ -45,8 +45,8 @@ async function createLambda() {
         Handler: "server.handler",
         Code: { ZipFile: zipFile },
         Description: "Preview Lambda function",
-        Timeout: 30,
-        MemorySize: 128,
+        Timeout: 300,
+        MemorySize: 512,
       }),
     );
     console.log(`Lambda function created: ${functionName}`);
