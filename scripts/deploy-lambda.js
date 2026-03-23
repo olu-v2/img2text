@@ -5,9 +5,6 @@ import {
   CreateFunctionCommand,
   UpdateFunctionCodeCommand,
   AddPermissionCommand,
-  CreateFunctionUrlConfigCommand,
-  GetFunctionUrlConfigCommand,
-  UpdateFunctionUrlConfigCommand,
 } from "@aws-sdk/client-lambda";
 
 import {
@@ -32,7 +29,7 @@ const apiClient = new ApiGatewayV2Client({
 });
 
 async function createLambda() {
-  const functionName = "img2text";
+  const functionName = `${process.env.LAMBDA_FUNCTION_NAME}img2text`;
   const zipFile = fs.readFileSync("./function.zip");
   const roleArn = process.env.LAMBDA_ROLE_ARN;
 
